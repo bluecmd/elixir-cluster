@@ -1,16 +1,51 @@
 version: "3.9"
+
+x-common-environment: &common-environment
+  RELEASE_COOKIE: 'foobar-replace-me'
+
 services:
   shard1:
     hostname: shard1.local
     build: cluster_agent
+    environment: *common-environment
   shard2:
     hostname: shard2.local
     build: cluster_agent
-      #  ctrl:
-      #    hostname: ctrl.local
-      #    build: cluster_agent
-      #    environment:
-      #      RELEASE_NODE: shard1.local
-      #    command:
-      #      - rpc
-      #      - 'node()'
+    environment: *common-environment
+  shard3:
+    hostname: shard3.local
+    build: cluster_agent
+    environment: *common-environment
+  shard4:
+    hostname: shard4.local
+    build: cluster_agent
+    environment: *common-environment
+  ctrl:
+    hostname: ctrl.local
+    build: cluster_agent
+    environment:
+      <<: *common-environment
+      RELEASE_NODE: 'cluster_agent@shard1.local'
+    depends_on:
+      - shard1
+      - shard2
+      - shard3
+      - shard4
+    command:
+      - rpc
+      # Wait 5 seconds before connecting the nodes to let them run around
+      # confused a bit first. It is not needed, just for me testing the
+      # behaviour.
+      - >
+        (
+        Process.sleep(5000);
+        Node.connect(:"cluster_agent@shard2.local");
+        Node.connect(:"cluster_agent@shard3.local");
+        Node.connect(:"cluster_agent@shard4.local");
+        IO.puts("OK, cluster up")
+        )
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 1s
+        max_attempts: 5
