@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  shard1:
+    hostname: shard1.local
+    build: cluster_agent
+  shard2:
+    hostname: shard2.local
+    build: cluster_agent
+      #  ctrl:
+      #    hostname: ctrl.local
+      #    build: cluster_agent
+      #    environment:
+      #      RELEASE_NODE: shard1.local
+      #    command:
+      #      - rpc
+      #      - 'node()'
